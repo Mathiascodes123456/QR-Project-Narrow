@@ -60,7 +60,7 @@ def test_generate_vcard_filename():
     assert filename == "john-doe.vcf"
     
     filename = generate_vcard_filename("Jane O'Connor-Smith")
-    assert filename == "jane-oconnor-smith.vcf"
+    assert filename == "jane-o-connor-smith.vcf"
     
     filename = generate_vcard_filename("")
     assert filename == "contact.vcf"

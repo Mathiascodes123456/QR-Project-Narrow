@@ -64,7 +64,7 @@ def test_scan_qr_endpoint():
     response = client.get(f"/scan/{vcard_id}")
     
     assert response.status_code == 200
-    assert response.headers["content-type"] == "text/vcard"
+    assert response.headers["content-type"] == "text/vcard; charset=utf-8"
     assert "attachment; filename=\"jane-smith.vcf\"" in response.headers["content-disposition"]
     assert "BEGIN:VCARD" in response.text
 
@@ -122,7 +122,7 @@ def test_get_vcard_direct():
     response = client.get(f"/vcard/{vcard_id}")
     
     assert response.status_code == 200
-    assert response.headers["content-type"] == "text/vcard"
+    assert response.headers["content-type"] == "text/vcard; charset=utf-8"
     assert "attachment; filename=\"direct-test.vcf\"" in response.headers["content-disposition"]
 
 

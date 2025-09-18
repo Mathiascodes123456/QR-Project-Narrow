@@ -25,18 +25,22 @@ def generate_qr_code(
     Returns:
         QR code as bytes
     """
+    import io
+    
     qr = segno.make(data)
     
-    if format == "png":
-        return qr.png_data(scale=size, border=border)
-    elif format == "svg":
-        return qr.svg_data(scale=size, border=border)
-    elif format == "eps":
-        return qr.eps_data(scale=size, border=border)
-    elif format == "pdf":
-        return qr.pdf_data(scale=size, border=border)
+    if format == "eps":
+        # EPS needs text mode
+        buffer = io.StringIO()
+        qr.save(buffer, kind=format, scale=size, border=border)
+        buffer.seek(0)
+        return buffer.getvalue().encode('utf-8')
     else:
-        raise ValueError(f"Unsupported format: {format}")
+        # Other formats use binary mode
+        buffer = io.BytesIO()
+        qr.save(buffer, kind=format, scale=size, border=border)
+        buffer.seek(0)
+        return buffer.getvalue()
 
 
 def get_qr_content_type(format: str) -> str:
