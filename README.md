@@ -1,226 +1,328 @@
-# QR → vCard Generator
+# QR Contact Generator
 
-A minimal, production-ready FastAPI application that generates QR codes that instantly download vCard files when scanned. No landing pages, no intermediate steps - just direct contact downloads.
+A modern, full-stack QR code generator for vCard contact sharing with comprehensive analytics. Built with React, Node.js, Express.js, and SQLite.
 
 ## Features
 
-- **Single HTML form** for contact information (name, company, title, email, phone, website)
-- **vCard 3.0 generation** with proper formatting
-- **Multiple QR code formats**: PNG, SVG, EPS, PDF (for print)
-- **Two QR modes**:
-  - **URL Mode**: QR contains a download link (recommended)
-  - **Direct Mode**: QR contains vCard data directly
-- **Instant downloads** with correct headers for mobile "Add to Contacts"
-- **Clean, minimal UI** with Tailwind CSS
-- **Comprehensive test suite** with pytest
+- **Professional QR Code Generation**: Create QR codes in multiple formats (PNG, SVG, EPS, PDF)
+- **vCard 3.0 Support**: Generate standards-compliant vCard files for instant contact import
+- **Real-time Analytics**: Track scans, device types, locations, and engagement metrics
+- **Modern UI**: Beautiful, responsive interface built with React and Tailwind CSS
+- **Direct Download**: QR codes trigger immediate "Add to Contacts" on mobile devices
+- **Multi-format Support**: Download QR codes in various formats for different use cases
+- **Comprehensive Dashboard**: View detailed analytics and scan statistics
+- **Export Capabilities**: Export analytics data as CSV for further analysis
+
+## Tech Stack
+
+### Frontend
+- **React 18** - Modern UI library
+- **Vite** - Fast build tool and dev server
+- **Tailwind CSS** - Utility-first CSS framework
+- **Chart.js** - Interactive charts and graphs
+- **React Router** - Client-side routing
+- **Axios** - HTTP client
+
+### Backend
+- **Node.js** - JavaScript runtime
+- **Express.js** - Web framework
+- **SQLite** - Lightweight database
+- **qrcode** - QR code generation library
+- **Helmet** - Security middleware
+- **CORS** - Cross-origin resource sharing
+- **Rate Limiting** - API protection
 
 ## Quick Start
 
 ### Prerequisites
 
-- Python 3.11+
-- pip
+- Node.js 18+ 
+- npm or yarn
 
 ### Installation
 
-1. **Clone and setup**:
+1. **Clone the repository**:
    ```bash
    git clone <repository-url>
-   cd qr-vcard-generator
+   cd qr-contact-generator
    ```
 
 2. **Install dependencies**:
    ```bash
-   make install
-   # or
-   pip install -r requirements.txt
+   npm install
    ```
 
-3. **Run development server**:
+3. **Set up environment variables**:
    ```bash
-   make dev
-   # or
-   uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
+   cp env.example .env
+   # Edit .env with your configuration
    ```
 
-4. **Open browser**: http://localhost:8000
+4. **Start the development servers**:
+   ```bash
+   npm run dev
+   ```
 
-### Production Deployment
+   This will start:
+   - Backend server on http://localhost:3000
+   - Frontend development server on http://localhost:5173
 
+5. **Open your browser**:
+   Navigate to http://localhost:5173
+
+## Available Scripts
+
+### Development
 ```bash
-# Install production dependencies
-pip install -r requirements.txt
+npm run dev          # Start both frontend and backend in development mode
+npm run server:dev   # Start only the backend server
+npm run client:dev   # Start only the frontend development server
+```
 
-# Run with uvicorn
-uvicorn app.main:app --host 0.0.0.0 --port 8000
+### Production
+```bash
+npm run build        # Build the frontend for production
+npm start           # Start the production server
+```
 
-# Or with gunicorn (recommended for production)
-pip install gunicorn
-gunicorn app.main:app -w 4 -k uvicorn.workers.UvicornWorker --bind 0.0.0.0:8000
+### Database
+```bash
+npm run db:migrate  # Run database migrations
+```
+
+### Testing
+```bash
+npm test            # Run all tests
+npm run test:watch  # Run tests in watch mode
 ```
 
 ## API Endpoints
 
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| `GET` | `/` | Home page with contact form |
-| `POST` | `/generate` | Generate vCard and QR codes |
-| `GET` | `/scan/{id}` | **Direct vCard download** (no landing page) |
-| `GET` | `/qr/{id}.{format}` | Download QR code (png/svg/eps/pdf) |
-| `GET` | `/vcard/{id}` | Direct vCard download |
+### vCard Management
+- `POST /api/vcard/generate` - Generate vCard and QR codes
+- `GET /api/vcard/:id` - Get vCard by ID
+- `GET /api/vcard/:id/download` - Download vCard file
+- `PUT /api/vcard/:id` - Update vCard
+- `DELETE /api/vcard/:id` - Delete vCard
 
-## Development
+### QR Code Generation
+- `GET /api/qr/:id/:format` - Download QR code in specified format
+- `GET /api/qr/:id/:format/data` - Get QR code as data URL
+- `POST /api/qr/generate` - Generate QR code from custom data
+- `GET /api/qr/:id/scan` - Handle QR code scan (direct vCard download)
 
-### Available Commands
+### Analytics
+- `POST /api/analytics/track/:vcardId` - Track a scan event
+- `GET /api/analytics/:vcardId` - Get analytics for specific vCard
+- `GET /api/analytics` - Get global analytics
+- `GET /api/analytics/export/:vcardId` - Export analytics as CSV
 
-```bash
-make dev        # Start development server
-make test       # Run tests
-make test-cov   # Run tests with coverage
-make lint       # Lint code
-make format     # Format code
-make clean      # Clean cache files
-make check      # Run lint and tests
+### Health Check
+- `GET /api/health` - Server health status
+
+## Project Structure
+
+```
+qr-contact-generator/
+├── server/                 # Backend code
+│   ├── database/          # Database initialization and utilities
+│   ├── routes/            # API route handlers
+│   ├── utils/             # Utility functions (vCard, QR generation)
+│   └── index.js           # Main server file
+├── src/                   # Frontend code
+│   ├── components/        # React components
+│   ├── pages/             # Page components
+│   ├── services/          # API service functions
+│   ├── App.jsx            # Main App component
+│   ├── main.jsx           # Entry point
+│   └── index.css          # Global styles
+├── public/                # Static assets
+├── dist/                  # Built frontend (production)
+├── package.json           # Dependencies and scripts
+├── vite.config.js         # Vite configuration
+├── tailwind.config.js     # Tailwind CSS configuration
+└── README.md              # This file
 ```
 
-### Project Structure
+## Configuration
 
-```
-qr-vcard-generator/
-├── app/
-│   ├── __init__.py
-│   ├── main.py          # FastAPI application
-│   ├── vcard.py         # vCard generation
-│   ├── qr.py           # QR code generation
-│   └── templates/
-│       ├── form.html    # Contact form
-│       └── success.html # Success page
-├── tests/
-│   ├── __init__.py
-│   ├── test_main.py     # API tests
-│   ├── test_vcard.py    # vCard tests
-│   └── test_qr.py       # QR code tests
-├── static/              # Static files (if needed)
-├── requirements.txt     # Dependencies
-├── Makefile            # Development commands
-├── .gitignore          # Git ignore rules
-└── README.md           # This file
-```
+### Environment Variables
 
-## QA Checklist
+Create a `.env` file in the root directory:
 
-Before deploying to production, verify the following:
+```env
+# Server Configuration
+PORT=3000
+NODE_ENV=development
 
-### ✅ Mobile Testing
-- [ ] **iOS Safari**: Scan QR code → "Add to Contacts" appears
-- [ ] **Android Chrome**: Scan QR code → "Add to Contacts" appears
-- [ ] **iOS Camera**: Scan QR code → Contact import works
-- [ ] **Android Camera**: Scan QR code → Contact import works
+# Database Configuration
+DATABASE_PATH=./qr_tracking.db
 
-### ✅ File Downloads
-- [ ] **vCard download**: Correct `text/vcard` content-type
-- [ ] **vCard filename**: Proper slugified name (e.g., `john-doe.vcf`)
-- [ ] **QR PNG**: Downloads and displays correctly
-- [ ] **QR SVG**: Downloads and displays correctly
-- [ ] **QR EPS**: Downloads (for print)
-- [ ] **QR PDF**: Downloads (for print)
+# Frontend Configuration
+FRONTEND_URL=http://localhost:5173
 
-### ✅ No Landing Pages
-- [ ] **Direct scan**: `/scan/{id}` returns vCard immediately
-- [ ] **No HTML**: Scan endpoint returns raw vCard, not HTML
-- [ ] **Correct headers**: `Content-Disposition: attachment`
-
-### ✅ QR Code Modes
-- [ ] **URL Mode**: QR contains download link
-- [ ] **Direct Mode**: QR contains vCard text directly
-- [ ] **Both modes**: Work on mobile devices
-
-### ✅ Form Validation
-- [ ] **Required fields**: Name is required
-- [ ] **Email format**: Validates email format
-- [ ] **Phone cleaning**: Removes formatting characters
-- [ ] **Website protocol**: Adds https:// if missing
-
-### ✅ Error Handling
-- [ ] **Invalid QR ID**: Returns 404
-- [ ] **Invalid format**: Returns 404 for unsupported formats
-- [ ] **Empty form**: Shows validation errors
-
-## Testing
-
-### Run All Tests
-```bash
-make test
-```
-
-### Run with Coverage
-```bash
-make test-cov
-```
-
-### Test Specific Module
-```bash
-pytest tests/test_vcard.py -v
-pytest tests/test_qr.py -v
-pytest tests/test_main.py -v
-```
-
-## Environment Variables
-
-Create a `.env` file for configuration:
-
-```bash
-# Optional: Custom base URL for QR codes
-BASE_URL=http://localhost:8000
-
-# Optional: QR code settings
+# QR Code Configuration
 QR_SIZE=10
 QR_BORDER=4
+QR_ERROR_CORRECTION_LEVEL=M
+
+# Analytics Configuration
+ANALYTICS_RETENTION_DAYS=365
+
+# Security Configuration
+RATE_LIMIT_WINDOW_MS=900000
+RATE_LIMIT_MAX_REQUESTS=100
 ```
 
-## v2 Features (Future)
+## Database Schema
 
-The following features are planned for v2 and should be implemented in the `work/v2` branch:
+### vcards Table
+- `id` (TEXT PRIMARY KEY) - Unique vCard identifier
+- `name` (TEXT NOT NULL) - Contact name
+- `company` (TEXT) - Company name
+- `title` (TEXT) - Job title
+- `email` (TEXT) - Email address
+- `phone` (TEXT) - Phone number
+- `website` (TEXT) - Website URL
+- `created_at` (TIMESTAMP) - Creation timestamp
+- `updated_at` (TIMESTAMP) - Last update timestamp
 
-- [ ] SQLite database for scan tracking
-- [ ] Simple authentication for dashboard
-- [ ] Scan analytics and statistics
-- [ ] ngrok integration for remote testing
-- [ ] Bulk QR code generation
-- [ ] Custom QR code styling
+### scans Table
+- `id` (INTEGER PRIMARY KEY) - Scan record ID
+- `vcard_id` (TEXT NOT NULL) - Associated vCard ID
+- `scan_time` (TIMESTAMP) - When the scan occurred
+- `ip_address` (TEXT) - Client IP address
+- `user_agent` (TEXT) - Client user agent
+- `country` (TEXT) - Client country
+- `city` (TEXT) - Client city
+- `latitude` (REAL) - Client latitude
+- `longitude` (REAL) - Client longitude
+- `referer` (TEXT) - HTTP referer
+- `device_type` (TEXT) - Device type (mobile/desktop/tablet)
+- `action` (TEXT) - Action type (scan/download/etc.)
 
-## Troubleshooting
+## Usage
 
-### Common Issues
+### Generating QR Codes
 
-1. **QR code not scanning**: Ensure the QR code is large enough and has good contrast
-2. **vCard not importing**: Check that all required fields are filled
-3. **Download not working**: Verify correct content-type headers
-4. **Mobile not offering "Add to Contacts"**: Ensure vCard format is valid
+1. **Fill out the contact form** with your information
+2. **Click "Generate Professional QR Code"**
+3. **Download your QR codes** in multiple formats
+4. **Share the QR code** - when scanned, it will immediately offer to add the contact
 
-### Debug Mode
+### Viewing Analytics
 
-Enable debug logging:
-```bash
-export PYTHONPATH=.
-uvicorn app.main:app --reload --log-level debug
+1. **Click "View My Analytics"** on the success page
+2. **View detailed statistics** including:
+   - Total scans and unique visitors
+   - Device type distribution
+   - Daily scan trends
+   - Recent scan activity
+   - Geographic data (if available)
+
+### Global Analytics
+
+1. **Navigate to the Analytics dashboard**
+2. **View platform-wide statistics** including:
+   - All QR codes and their performance
+   - Top performing QR codes
+   - Global scan trends
+   - Recent activity across all users
+
+## QR Code Formats
+
+- **PNG**: Best for digital use, web, and mobile apps
+- **SVG**: Scalable vector format, perfect for web and print
+- **EPS**: Professional print format for high-quality printing
+- **PDF**: Universal format for sharing and printing
+
+## Mobile Compatibility
+
+The generated QR codes are optimized for mobile devices:
+- **iOS**: Automatically triggers "Add to Contacts" when scanned
+- **Android**: Prompts to add contact to device
+- **Cross-platform**: Works with any QR code scanner
+
+## Security Features
+
+- **Rate Limiting**: Prevents API abuse
+- **CORS Protection**: Secure cross-origin requests
+- **Input Validation**: Sanitizes all user inputs
+- **SQL Injection Protection**: Parameterized queries
+- **XSS Protection**: Content Security Policy headers
+
+## Deployment
+
+### Production Build
+
+1. **Build the frontend**:
+   ```bash
+   npm run build
+   ```
+
+2. **Set production environment**:
+   ```bash
+   export NODE_ENV=production
+   ```
+
+3. **Start the server**:
+   ```bash
+   npm start
+   ```
+
+### Docker Deployment
+
+```dockerfile
+FROM node:18-alpine
+
+WORKDIR /app
+
+COPY package*.json ./
+RUN npm ci --only=production
+
+COPY . .
+RUN npm run build
+
+EXPOSE 3000
+
+CMD ["npm", "start"]
 ```
 
-## License
+### Environment Variables for Production
 
-MIT License - see LICENSE file for details.
+```env
+NODE_ENV=production
+PORT=3000
+DATABASE_PATH=/data/qr_tracking.db
+FRONTEND_URL=https://yourdomain.com
+```
 
 ## Contributing
 
 1. Fork the repository
 2. Create a feature branch: `git checkout -b feature/amazing-feature`
-3. Commit changes: `git commit -m 'Add amazing feature'`
-4. Push to branch: `git push origin feature/amazing-feature`
+3. Commit your changes: `git commit -m 'Add amazing feature'`
+4. Push to the branch: `git push origin feature/amazing-feature`
 5. Open a Pull Request
+
+## License
+
+MIT License - see LICENSE file for details.
 
 ## Support
 
 For issues and questions:
 - Create an issue in the repository
-- Check the QA checklist above
-- Review the test suite for examples
+- Check the documentation above
+- Review the API endpoints for integration help
+
+## Changelog
+
+### v1.0.0
+- Initial release
+- QR code generation in multiple formats
+- vCard 3.0 support
+- Real-time analytics dashboard
+- Mobile-optimized scanning
+- Professional UI/UX
+- Comprehensive API
