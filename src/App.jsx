@@ -4,7 +4,6 @@ import Header from './components/Header'
 import Home from './pages/Home'
 import Success from './pages/Success'
 import Dashboard from './pages/Dashboard'
-import Analytics from './pages/Analytics'
 
 function App() {
   return (
@@ -14,8 +13,7 @@ function App() {
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/success/:vcardId" element={<Success />} />
-          <Route path="/dashboard" element={<Dashboard />} />
-          <Route path="/dashboard/:vcardId" element={<Analytics />} />
+          <Route path="/dashboard/:vcardId" element={<Dashboard />} />
         </Routes>
       </main>
     </div>

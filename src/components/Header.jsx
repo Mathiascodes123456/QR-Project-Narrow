@@ -31,16 +31,6 @@ const Header = () => {
             >
               Generate QR
             </Link>
-            <Link 
-              to="/dashboard" 
-              className={`text-sm font-medium transition-colors ${
-                location.pathname.startsWith('/dashboard') 
-                  ? 'text-primary' 
-                  : 'text-gray-600 hover:text-primary'
-              }`}
-            >
-              Analytics
-            </Link>
           </nav>
         </div>
       </div>

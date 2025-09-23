@@ -1,19 +1,67 @@
 import React, { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { getVCard, trackScan } from '../services/vcardService'
+import { getVCardAnalytics } from '../services/analyticsService'
+import QRCodeCustomizer from '../components/QRCodeCustomizer'
 
 const Success = () => {
   const { vcardId } = useParams()
   const navigate = useNavigate()
   const [vcardData, setVcardData] = useState(null)
+  const [analytics, setAnalytics] = useState(null)
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState(null)
+  const [showCustomizer, setShowCustomizer] = useState(false)
+
+  // Generate vCard content for QR code
+  const generateVCardContent = (vcard) => {
+    let vcardContent = 'BEGIN:VCARD\nVERSION:3.0\n'
+    
+    if (vcard.name) {
+      const nameParts = vcard.name.split(' ')
+      const firstName = nameParts[0] || ''
+      const lastName = nameParts.slice(1).join(' ') || ''
+      vcardContent += `FN:${vcard.name}\n`
+      vcardContent += `N:${lastName};${firstName};;;\n`
+    }
+    
+    if (vcard.company) {
+      vcardContent += `ORG:${vcard.company}\n`
+    }
+    
+    if (vcard.title) {
+      vcardContent += `TITLE:${vcard.title}\n`
+    }
+    
+    if (vcard.email) {
+      vcardContent += `EMAIL:${vcard.email}\n`
+    }
+    
+    if (vcard.phone) {
+      vcardContent += `TEL:${vcard.phone}\n`
+    }
+    
+    if (vcard.website) {
+      vcardContent += `URL:${vcard.website}\n`
+    }
+    
+    vcardContent += 'END:VCARD'
+    return vcardContent
+  }
 
   useEffect(() => {
     const fetchVCardData = async () => {
       try {
-        const data = await getVCard(vcardId)
-        setVcardData(data)
+        const [vcardData, analyticsData] = await Promise.all([
+          getVCard(vcardId),
+          getVCardAnalytics(vcardId).catch(() => null) // Don't fail if analytics fails
+        ])
+        
+        setVcardData({
+          ...vcardData,
+          vcardContent: generateVCardContent(vcardData)
+        })
+        setAnalytics(analyticsData)
         
         // Track QR code generation
         await trackScan(vcardId, {
@@ -105,49 +153,79 @@ const Success = () => {
     <div className="container mx-auto px-6 py-16 max-w-7xl">
       {/* Header */}
       <div className="text-center mb-16">
-        <div className="inline-flex items-center justify-center w-20 h-20 bg-green-600 rounded-lg mb-8">
+        <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-r from-green-500 to-emerald-600 rounded-2xl mb-8 shadow-lg">
           <svg className="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path>
           </svg>
         </div>
         <h1 className="text-5xl font-bold text-corporate mb-6 leading-tight">
-          QR Code Generated Successfully
+          Your QR Code is Ready!
         </h1>
-        <p className="text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed">
-          Your professional contact QR codes are ready for download and business networking
+        <p className="text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed mb-8">
+          Share your professional contact information instantly with anyone who scans your QR code
         </p>
+        
+        {/* Personal Stats Widget */}
+        {analytics && (
+          <div className="inline-flex items-center space-x-8 bg-white rounded-2xl px-8 py-4 shadow-lg border border-gray-200">
+            <div className="text-center">
+              <div className="text-2xl font-bold text-primary">{analytics.totalScans || 0}</div>
+              <div className="text-sm text-gray-600">Total Scans</div>
+            </div>
+            <div className="w-px h-12 bg-gray-200"></div>
+            <div className="text-center">
+              <div className="text-2xl font-bold text-green-600">{analytics.uniqueVisitors || 0}</div>
+              <div className="text-sm text-gray-600">Unique People</div>
+            </div>
+            <div className="w-px h-12 bg-gray-200"></div>
+            <div className="text-center">
+              <div className="text-2xl font-bold text-purple-600">{analytics.mobileScans || 0}</div>
+              <div className="text-sm text-gray-600">Mobile Scans</div>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Main Content */}
       <div className="grid lg:grid-cols-2 gap-10 mb-16">
         {/* QR Code Preview */}
-        <div className="card">
-          <h2 className="text-3xl font-bold text-corporate mb-8">QR Code Preview</h2>
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-8">
+          <h2 className="text-2xl font-semibold text-gray-900 mb-6">Your QR Code</h2>
           <div className="flex justify-center">
-            <div className="bg-white p-8 rounded-lg shadow-md border border-gray-200">
+            <div className="bg-gray-50 p-6 rounded-lg border border-gray-200 hover:border-blue-300 transition-all duration-300">
               <img
                 src={`data:image/png;base64,${vcardData.qrFiles.png}`}
                 alt="QR Code Preview"
-                className="w-72 h-72"
+                className="w-64 h-64"
               />
             </div>
           </div>
-          <p className="text-center text-gray-600 mt-6 leading-relaxed">
-            Scan this QR code to instantly add the contact to your device
-          </p>
+          <div className="text-center mt-6">
+            <p className="text-gray-600 leading-relaxed mb-4">
+              <span className="font-semibold text-blue-600">Instant contact sharing</span><br/>
+              When someone scans this QR code, their phone will instantly offer to add your contact
+            </p>
+            <div className="inline-flex items-center space-x-2 text-sm text-gray-500">
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
+              </svg>
+              <span>Works offline • No app required</span>
+            </div>
+          </div>
         </div>
 
         {/* Download Options */}
         <div className="space-y-8">
           {/* vCard Download */}
-          <div className="card">
-            <h2 className="text-2xl font-bold text-corporate mb-6">vCard File</h2>
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+            <h2 className="text-xl font-semibold text-gray-900 mb-4">vCard File</h2>
+            <p className="text-gray-600 mb-6">Download the contact file that gets shared when your QR code is scanned</p>
             <a
               href={`/api/vcard/${vcardId}/download`}
               onClick={handleDownloadVCard}
-              className="inline-flex items-center justify-center w-full px-8 py-4 btn-primary text-lg"
+              className="inline-flex items-center justify-center w-full px-6 py-3 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors"
             >
-              <svg className="w-6 h-6 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
               </svg>
               Download {vcardData.vcardFilename}
@@ -155,8 +233,17 @@ const Success = () => {
           </div>
 
           {/* QR Code Downloads */}
-          <div className="card">
-            <h2 className="text-2xl font-bold text-corporate mb-6">QR Code Downloads</h2>
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-xl font-semibold text-gray-900">QR Code Downloads</h2>
+              <button
+                onClick={() => setShowCustomizer(!showCustomizer)}
+                className="px-4 py-2 bg-purple-600 text-white font-medium rounded-lg hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 transition-colors"
+              >
+                {showCustomizer ? 'Hide Customizer' : 'Customize QR Code'}
+              </button>
+            </div>
+            <p className="text-gray-600 mb-6">Choose your preferred format for different use cases</p>
             <div className="grid grid-cols-2 gap-4">
               {['png', 'svg', 'eps', 'pdf'].map((format) => (
                 vcardData.qrFiles[format] && (
@@ -164,7 +251,7 @@ const Success = () => {
                     key={format}
                     href={`/api/qr/${vcardId}/${format}`}
                     onClick={() => handleDownloadQR(format)}
-                    className="flex flex-col items-center p-4 bg-gray-50 rounded-2xl border-2 border-gray-200 hover:border-primary hover:bg-primary/5 transition-all duration-200 group"
+                    className="flex flex-col items-center p-4 bg-gray-50 rounded-lg border border-gray-200 hover:border-blue-300 hover:bg-blue-50 transition-all duration-200 group"
                   >
                     <div className="w-10 h-10 mb-3 flex items-center justify-center">
                       {format === 'png' && (
@@ -188,7 +275,7 @@ const Success = () => {
                         </svg>
                       )}
                     </div>
-                    <span className="text-sm font-semibold text-gray-700 uppercase group-hover:text-primary">{format}</span>
+                    <span className="text-sm font-semibold text-gray-700 uppercase group-hover:text-blue-600">{format}</span>
                   </a>
                 )
               ))}
@@ -197,51 +284,64 @@ const Success = () => {
         </div>
       </div>
 
+      {/* QR Code Customizer */}
+      {showCustomizer && (
+        <div className="mb-16">
+          <QRCodeCustomizer 
+            vcardData={vcardData}
+            onQRCodeGenerated={(customQR) => {
+              // Handle custom QR code generation if needed
+              console.log('Custom QR code generated:', customQR)
+            }}
+          />
+        </div>
+      )}
+
       {/* Instructions & Actions */}
       <div className="grid md:grid-cols-2 gap-8">
         {/* Instructions */}
-        <div className="card">
-          <h2 className="text-2xl font-bold text-gray-900 mb-6">How It Works</h2>
-          <div className="space-y-4">
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+          <h2 className="text-xl font-semibold text-gray-900 mb-6">How Your QR Code Works</h2>
+          <div className="space-y-6">
             <div className="flex items-start space-x-4">
-              <div className="flex-shrink-0 w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center">
-                <span className="text-primary font-bold text-sm">1</span>
+              <div className="flex-shrink-0 w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center">
+                <span className="text-white font-semibold text-sm">1</span>
               </div>
               <div>
-                <h3 className="font-semibold text-gray-900">Direct vCard Mode</h3>
-                <p className="text-gray-600 text-sm">All QR codes contain vCard data directly</p>
+                <h3 className="font-medium text-gray-900 text-lg">Someone Scans Your QR</h3>
+                <p className="text-gray-600">Their phone camera instantly recognizes the QR code and reads your contact info</p>
               </div>
             </div>
             
             <div className="flex items-start space-x-4">
-              <div className="flex-shrink-0 w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center">
-                <span className="text-primary font-bold text-sm">2</span>
+              <div className="flex-shrink-0 w-8 h-8 bg-green-600 rounded-full flex items-center justify-center">
+                <span className="text-white font-semibold text-sm">2</span>
               </div>
               <div>
-                <h3 className="font-semibold text-gray-900">Instant Import</h3>
-                <p className="text-gray-600 text-sm">When scanned, mobile devices immediately offer "Add to Contacts"</p>
+                <h3 className="font-medium text-gray-900 text-lg">Instant Contact Addition</h3>
+                <p className="text-gray-600">Their phone immediately offers to "Add to Contacts" - no apps needed!</p>
               </div>
             </div>
             
             <div className="flex items-start space-x-4">
-              <div className="flex-shrink-0 w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center">
-                <span className="text-primary font-bold text-sm">3</span>
+              <div className="flex-shrink-0 w-8 h-8 bg-purple-600 rounded-full flex items-center justify-center">
+                <span className="text-white font-semibold text-sm">3</span>
               </div>
               <div>
-                <h3 className="font-semibold text-gray-900">Offline Ready</h3>
-                <p className="text-gray-600 text-sm">No internet required after QR code generation</p>
+                <h3 className="font-medium text-gray-900 text-lg">Analytics Tracking</h3>
+                <p className="text-gray-600">We track every scan so you can see who's interested in connecting with you</p>
               </div>
             </div>
           </div>
         </div>
 
         {/* Actions */}
-        <div className="card">
-          <h2 className="text-2xl font-bold text-gray-900 mb-6">Actions</h2>
-          <div className="space-y-4">
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+          <h2 className="text-xl font-semibold text-gray-900 mb-6">Actions</h2>
+          <div className="space-y-3">
             <button
               onClick={() => navigate('/')}
-              className="w-full btn-secondary"
+              className="w-full flex items-center justify-center px-4 py-3 border border-gray-300 text-gray-700 font-medium rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors"
             >
               <svg className="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0a9 9 0 11-18 0 9 9 0 0118 0z"></path>
@@ -251,7 +351,7 @@ const Success = () => {
             
             <button
               onClick={handlePrint}
-              className="w-full bg-gradient-to-r from-green-600 to-green-700 text-white py-4 px-6 rounded-2xl hover:from-green-700 hover:to-green-800 focus:outline-none focus:ring-4 focus:ring-green-500/20 transition-all duration-300 font-semibold shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
+              className="w-full flex items-center justify-center px-4 py-3 bg-green-600 text-white font-medium rounded-lg hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition-colors"
             >
               <svg className="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path>
@@ -261,7 +361,7 @@ const Success = () => {
             
             <button
               onClick={() => navigate(`/dashboard/${vcardId}`)}
-              className="w-full bg-gradient-to-r from-indigo-600 to-indigo-700 text-white py-4 px-6 rounded-2xl hover:from-indigo-700 hover:to-indigo-800 focus:outline-none focus:ring-4 focus:ring-indigo-500/20 transition-all duration-300 font-semibold shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
+              className="w-full flex items-center justify-center px-4 py-3 bg-indigo-600 text-white font-medium rounded-lg hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-colors"
             >
               <svg className="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
