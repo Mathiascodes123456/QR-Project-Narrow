@@ -49,7 +49,7 @@ router.post('/track', async (req, res) => {
       userAgent,
       deviceType,
       action,
-      timestamp || new Date().toISOString()
+      new Date().toISOString()
     ]);
 
     res.json({
@@ -98,8 +98,8 @@ router.post('/track/:vcardId', async (req, res) => {
 
     // Log the scan event
     await run(`
-      INSERT INTO scans (vcard_id, ip_address, user_agent, country, city, latitude, longitude, referer, device_type, action)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      INSERT INTO scans (vcard_id, ip_address, user_agent, country, city, latitude, longitude, referer, device_type, action, scan_time)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `, [
       vcardId,
       ipAddress,
@@ -110,7 +110,8 @@ router.post('/track/:vcardId', async (req, res) => {
       location?.longitude || null,
       req.headers.referer || null,
       deviceType,
-      action
+      action,
+      new Date().toISOString()
     ]);
 
     res.json({
